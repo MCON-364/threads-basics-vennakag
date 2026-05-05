@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 /**
  * Homework — Executor-backed task manager with atomic IDs.
@@ -97,8 +98,11 @@ public class ExecutorTaskManager {
 
         // TODO: hand the task to the pool as a Callable that processes it and
         //       returns it when done — return the Future the pool gives you back
+        int idNum = nextId();
         return pool.submit(() -> {
-            return new Task(nextId(), description, priority);
+            Task task = new Task(idNum, description, priority);
+            completedTasks.add(task);
+            return task;
         });
     }
 
@@ -113,6 +117,12 @@ public class ExecutorTaskManager {
      */
     private void recordCompleted(Task task) {
         // TODO: implement
+        lock.lock();
+        try {
+            completedTasks.add(task);
+        }finally {
+            lock.unlock();
+        }
     }
 
     // ── collecting results ───────────────────────────────────────────────────
@@ -126,7 +136,13 @@ public class ExecutorTaskManager {
      */
     public List<Task> awaitAll(List<Future<Task>> futures) {
         // TODO: implement
-        return new ArrayList<>();
+        return futures.stream().map(t-> {
+            try {
+                return t.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.toList());
     }
 
     // ── lifecycle ────────────────────────────────────────────────────────────
@@ -139,6 +155,7 @@ public class ExecutorTaskManager {
      */
     public void shutdown() throws InterruptedException {
         // TODO: implement
+        pool.shutdown();
     }
 
     // ── observability ────────────────────────────────────────────────────────
@@ -147,12 +164,12 @@ public class ExecutorTaskManager {
     public List<Task> getCompletedTasks() {
         // TODO: protect the read with the same lock used in recordCompleted,
         //       then return a defensive copy so callers cannot mutate internal state
-        return null;
+        return completedTasks;
     }
 
     /** Returns the most recently generated ID (useful for assertions). */
     public int getLastIssuedId() {
         // TODO: read the current value from the ID counter
-        return 0;
+        return id.get();
     }
 }
