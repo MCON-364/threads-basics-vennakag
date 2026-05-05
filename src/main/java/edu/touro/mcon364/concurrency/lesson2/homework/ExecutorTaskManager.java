@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Homework — Executor-backed task manager with atomic IDs.
@@ -60,13 +61,15 @@ public class ExecutorTaskManager {
     private static final int POOL_SIZE = 4;
 
     // TODO: declare the thread pool — what factory method gives you a fixed-size pool?
-
+    ExecutorService pool = Executors.newFixedThreadPool(POOL_SIZE);
     // TODO: declare the ID counter — what type guarantees uniqueness without synchronized?
+    AtomicInteger id = new AtomicInteger(0);
 
     // List of tasks that have finished — written by worker threads, so needs protection
     private final List<Task> completedTasks = new ArrayList<>();
 
     // TODO: declare the lock that will protect completedTasks
+    ReentrantLock lock = new ReentrantLock();
 
     // ── ID generation ────────────────────────────────────────────────────────
 
@@ -76,7 +79,7 @@ public class ExecutorTaskManager {
      */
     public int nextId() {
         // TODO: implement
-        return 0;
+        return id.incrementAndGet();
     }
 
     // ── task submission ──────────────────────────────────────────────────────
@@ -90,12 +93,13 @@ public class ExecutorTaskManager {
      */
     public Future<Task> submit(String description, Priority priority) {
         // TODO: obtain a unique ID for this task
-
         // TODO: build the Task record
 
         // TODO: hand the task to the pool as a Callable that processes it and
         //       returns it when done — return the Future the pool gives you back
-        return null;
+        return pool.submit(() -> {
+            return new Task(nextId(), description, priority);
+        });
     }
 
     // ── recording completion ─────────────────────────────────────────────────
