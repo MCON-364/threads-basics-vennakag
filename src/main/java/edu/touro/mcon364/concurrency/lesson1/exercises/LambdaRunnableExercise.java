@@ -10,7 +10,7 @@ import java.util.List;
  * Exercise 5: Creating threads with a Runnable passed as a lambda
  *
  * The lesson showed four equivalent ways to write a Runnable.
- * This exercise practises the lambda style — the most common modern form:
+ * This exercise practices the lambda style — the most common modern form:
  *
  *   Runnable r = () -> { ... };
  *   Thread t = new Thread(r, "thread-name");
@@ -51,6 +51,10 @@ public class LambdaRunnableExercise {
     public void launchLoggerThread(List<String> log, String message) throws InterruptedException {
         // TODO: create a Runnable lambda, pass it to new Thread(..., "logger"),
         //       start the thread, join it, and store the message in loggedMessage.
+        Thread thread = new Thread(() -> {log.add(message);}, "logger");
+        thread.start();
+        thread.join();
+        loggedMessage = message;
     }
 
     /**
@@ -62,6 +66,15 @@ public class LambdaRunnableExercise {
     public void launchTwoCounterThreads(List<Task> tasks) throws InterruptedException {
         // TODO: create two threads using inline lambda syntax, start both,
         //       join both, and store results in highCount and lowCount.
+        Thread thread1 = new Thread(() ->
+        {highCount = (int) tasks.stream().filter(t->t.priority().equals(Priority.HIGH)).count();});
+        thread1.start();
+        Thread thread2 = new Thread(() ->
+        {lowCount = (int) tasks.stream().filter(t->t.priority().equals(Priority.LOW)).count();});
+        thread2.start();
+        thread1.join();
+        thread2.join();
+
     }
 
     public String getLoggedMessage() { return loggedMessage; }

@@ -41,6 +41,15 @@ public class TaskWorker {
         // TODO: create a thread with the given name that processes every task
         //       in the list (increment processedCount for each one),
         //       then start it and join it.
+        Thread t = new Thread(() -> {
+            workerName = Thread.currentThread().getName();
+            for(Task task : tasks) {
+                processedCount++;
+            }
+        }, threadName);
+        t.setName(this.threadName);
+        t.start();
+        t.join();
     }
 
     /** Returns the number of tasks processed by the worker thread. */
